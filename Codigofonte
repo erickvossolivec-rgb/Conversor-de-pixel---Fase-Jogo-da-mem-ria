@@ -1,0 +1,141 @@
+
+                #Conversor de pixel arte em fase do Jogo da Memória
+
+                #Autor: Erick Voss de Oliveira
+
+                #Data de criação: 14/09/2026
+
+                #Última atualização: 07/10/2026 Conversão da saida para conveniencia
+
+#Bibliotecas
+
+import tkinter as tk                         #Biblioteca para interfaces
+from tkinter import filedialog, scrolledtext #Biblioteca para Exploração de arquivos integrada nas interfaces
+from PIL import Image, ImageTk               #Biblioteca para utilização de arquivo de imagens
+import math                                  #Biblioteca de operações matemáticas
+
+imagefile = r"C:\Users\HP\OneDrive\Udesc\4° Semestre\SDM0002\Projeto extensão\App\NA.bmp" #Arquivo Placeholder enquanto nenhum arquivo é selecionado
+TAMANHO_EXIBICAO = (450, 450)#Define o tamanho da imagem a ser mostrada na janala
+
+#Look up table com as cores utilizadas e seus respectivos códigos RGB
+
+cores_char = ['R', 'G', 'B', 'Y', 'M', 'C', 'W','O']
+cores_rgb = [
+    (255, 0, 0),     # R - Vermelho (0xFF0000)
+    (0, 255, 0),     # G - Verde    (0x00FF00)
+    (0, 0, 255),     # B - Azul     (0x0000FF)
+    (255, 255, 0),   # Y - Amarelo  (0xFFFF00)
+    (255, 0, 255),   # M - Magenta  (0xFF00FF)
+    (0, 255, 255),   # C - Ciano    (0x00FFFF)
+    (255, 255, 255), # W - Branco   (0xFFFFFF)
+    (255, 125, 000)  # O - Laranja  (0xFF7D00)
+    
+]
+
+#Pega a imagem presente no dirétorio selecionado e deixa do tamanho apropriado para exebição na janela
+def carregar_e_ampliar(caminho):
+    img_pil = Image.open(caminho)
+    img_pil = img_pil.resize(TAMANHO_EXIBICAO, resample=Image.Resampling.NEAREST)
+    return ImageTk.PhotoImage(img_pil)
+
+#Abre o Seletor de arquivos e pega informações do arquivo selecionado
+def explorar_arquivos():
+    global imagefile, img, img_container
+    
+    caminho_selecionado = filedialog.askopenfilename(
+        title="Escolha uma Imagem",
+        filetypes=[("Arquivos de Imagem", "*.bmp;*.png;*.jpg;*.jpeg")]
+    )
+    
+    if caminho_selecionado:
+        imagefile = caminho_selecionado
+        img = carregar_e_ampliar(imagefile)
+        imagem.itemconfig(img_container, image=img)
+
+#Tranforma posição matricial em ordinal
+def posled(i,j):
+   return(i+9*j)
+
+#Mede a distância de valor de cor entre duas cores
+def distrgb(rgb,jkl):
+    r,g,b = rgb
+    j,k,l = jkl
+    dist = math.sqrt((r - j)**2 + (g - k)**2 + (b - l)**2)
+    return(dist)
+
+#Caso na imagem haja pixels de cores não definidas pelo código, pegará a cor mais próxima das disponíveis
+def definidordecor(rgb):
+    distancias = []
+    #Guarda as distâncias correspondo o indice da cor comparada, através do mínimo valor nesse vetor encontramos a cor mais próxima correspondente a esse índice
+    for i in range(len(cores_char)):
+        distancias.append(distrgb(rgb,cores_rgb[i]))
+    indx = distancias.index(min(distancias))
+    return(cores_char[indx])
+
+#Converte a imagem selecionada em código utilizável para o Jogo da memória
+def imglvl():
+    global imagefile, img, img_container
+    im = Image.open(imagefile).convert('RGB') #Converte imagem em valores de RGB extraíveis
+    imageSizeW, imageSizeH = im.size #Extraí tamanho da imagem
+    pixelnaopreto =[]
+    #Extrai informação de cor de posição de pixels não pretos (que seriam desligados) e guarda em um array, o qual será printado na janela para copiar e colar no código
+    for i in range(0, imageSizeW):
+        for j in range(0, imageSizeH):
+            pixVal = im.getpixel((i, j)) #Pega cor do pixel na posição i,j
+            if pixVal != (0, 0, 0): #Se o pixel não for preto
+                pixelnaopreto.append([posled(i,j), definidordecor(pixVal)])
+                #Converte a posição em posição sequencial e a cor na cor mais próxima utilizada e guarda na lista de pixels a serem ligados nos leds
+
+    #Traduz para C    
+    elementos = str(pixelnaopreto).replace("[","{")
+    elementos = elementos.replace("]","}")
+   
+                
+    #Exibe as informações do pixel na janela
+    pixels.config(state="normal")
+    pixels.delete("1.0", tk.END) 
+    pixels.insert(tk.END, elementos)
+    pixels.config(state="disabled")
+
+#Configuração da interface
+
+#Gera uma janela, define seu tamanho e título    
+janela = tk.Tk() 
+janela.title('Pixelart -> Nível')
+janela.geometry("550x650")
+janela.iconbitmap(r"C:\Users\HP\OneDrive\Udesc\4° Semestre\SDM0002\Projeto extensão\App\udescconverticon.ico")
+
+#Configura a imagem de exibição do arquivo selecionado
+imgframe = tk.Frame(janela)
+imgframe.pack(pady=10)
+
+imagem = tk.Canvas(imgframe, width=500, height=500, bg="white", bd=5, relief="sunken")
+imagem.pack()
+
+img = carregar_e_ampliar(imagefile)
+img_container = imagem.create_image(250, 250, image=img, anchor="center")
+
+#Botão de explorador de arquivos
+
+explorador = tk.Frame(janela)
+explorador.pack(pady=10)
+
+button_explore = tk.Button(explorador, text="Explorar arquivo", command=explorar_arquivos)
+button_explore.pack(pady=10)
+
+#Botão de executar conversão
+
+comandoframe = tk.Frame(janela)
+comandoframe.pack(pady=10)
+
+bttconverter = tk.Button(comandoframe, text="Extrair informação dos píxels", command=imglvl)
+bttconverter.pack(pady=10)
+
+#Exibição das informações dos pixels extraídas
+
+pixels = scrolledtext.ScrolledText(janela, width=40, height=10, wrap="word")
+pixels.pack(padx=10, pady=10, fill="both", expand=True)
+pixels.config(state="disabled")
+
+#Loop principal da interface definido
+janela.mainloop()
