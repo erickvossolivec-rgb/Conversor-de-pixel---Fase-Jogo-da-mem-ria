@@ -5,7 +5,7 @@
 
                 #Data de criação: 14/09/2026
 
-                #Última atualização: 07/10/2026 Conversão da saida para conveniencia
+                #Última atualização: 16/10/2026 Problema na dependência de uma imagem consertado
 
 #Bibliotecas
 
@@ -13,8 +13,19 @@ import tkinter as tk                         #Biblioteca para interfaces
 from tkinter import filedialog, scrolledtext #Biblioteca para Exploração de arquivos integrada nas interfaces
 from PIL import Image, ImageTk               #Biblioteca para utilização de arquivo de imagens
 import math                                  #Biblioteca de operações matemáticas
+import sys                                   #Biblioteca de interação entre o interpertador com o local do script
+import os                                    #Biblioteca para gerir pastas e diretórios
+ 
+#busca o endereço relativo ao invés do literal
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
 
-imagefile = r"C:\Users\HP\OneDrive\Udesc\4° Semestre\SDM0002\Projeto extensão\App\NA.bmp" #Arquivo Placeholder enquanto nenhum arquivo é selecionado
+    return os.path.join(base_path, relative_path)
+
+imagefile = resource_path("NA.bmp") #Arquivo Placeholder enquanto nenhum arquivo é selecionado
 TAMANHO_EXIBICAO = (450, 450)#Define o tamanho da imagem a ser mostrada na janala
 
 #Look up table com as cores utilizadas e seus respectivos códigos RGB
@@ -103,7 +114,9 @@ def imglvl():
 janela = tk.Tk() 
 janela.title('Pixelart -> Nível')
 janela.geometry("550x650")
-janela.iconbitmap(r"C:\Users\HP\OneDrive\Udesc\4° Semestre\SDM0002\Projeto extensão\App\udescconverticon.ico")
+
+janela.iconbitmap(resource_path("udescconverticon.ico"))
+
 
 #Configura a imagem de exibição do arquivo selecionado
 imgframe = tk.Frame(janela)
