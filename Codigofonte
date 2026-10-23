@@ -5,17 +5,19 @@
 
                 #Data de criação: 14/09/2026
 
-                #Última atualização: 16/10/2026 Problema na dependência de uma imagem consertado
+                #Última atualização: 22/10/2026 Adaptado para mais orientações de fita LED
 
 #Bibliotecas
 
-import tkinter as tk                         #Biblioteca para interfaces
-from tkinter import filedialog, scrolledtext #Biblioteca para Exploração de arquivos integrada nas interfaces
-from PIL import Image, ImageTk               #Biblioteca para utilização de arquivo de imagens
-import math                                  #Biblioteca de operações matemáticas
-import sys                                   #Biblioteca de interação entre o interpertador com o local do script
-import os                                    #Biblioteca para gerir pastas e diretórios
- 
+import tkinter as tk                            #Biblioteca para interfaces
+from tkinter import  scrolledtext, Tk,Menu,ttk  #Biblioteca para interfaces pt2
+from tkinter import filedialog                  #Bibliotecas para Exploração de arquivos integrada nas interfaces
+from PIL import Image, ImageTk                  #Biblioteca para utilização de arquivo de imagens
+import math                                     #Biblioteca de operações matemáticas
+import sys                                      #Biblioteca de interação entre o interpertador com o local do script
+import os                                       #Biblioteca para gerir pastas e diretórios
+
+
 #busca o endereço relativo ao invés do literal
 def resource_path(relative_path):
     try:
@@ -43,6 +45,11 @@ cores_rgb = [
     
 ]
 
+#Look up table com as orientações de primeiro led possíveis
+
+orient = ["Canto Superior Esquerdo","Canto Superior Direito","Canto Inferior Esquerdo","Canto Inferior Direito"]
+ 
+
 #Pega a imagem presente no dirétorio selecionado e deixa do tamanho apropriado para exebição na janela
 def carregar_e_ampliar(caminho):
     img_pil = Image.open(caminho)
@@ -64,8 +71,42 @@ def explorar_arquivos():
         imagem.itemconfig(img_container, image=img)
 
 #Tranforma posição matricial em ordinal
-def posled(i,j):
-   return(i+9*j)
+        
+def posled(i,j,W,H):
+    O = orientation.get()
+    Alterna = alterna.get()
+    if Alterna:
+        if O == orient[0]:
+            if j%2 == 0:
+                return(W*j+i)
+            else:
+                return(W*j+(W-1-i))
+        if O == orient[1]:
+            if j%2 ==0:
+                return(W*j+(W-1-i))
+            else:
+                return(W*j+i)
+        if O == orient[2]:
+            if j%2 ==0:
+                return(((H-1-j)*W+i))
+            else:
+                return((H-1-j)*W+(W-1-i))
+        if O == orient[3]:
+            if j%2 !=0:
+                return((H-1-j)*W+i)
+            else:
+                return((H-1-j)*W+(W-1-i))            
+    else:
+        if O == orient[0]:
+            return(W*j+i)
+        if O == orient[1]:
+            return(W*j+W-1-i)
+        if O == orient[2]:
+            return(((H-1-j)*W+i))
+        if O == orient[3]:
+            return((H-1-j)*W+(W-1-i))  
+        
+                
 
 #Mede a distância de valor de cor entre duas cores
 def distrgb(rgb,jkl):
@@ -88,21 +129,24 @@ def imglvl():
     global imagefile, img, img_container
     im = Image.open(imagefile).convert('RGB') #Converte imagem em valores de RGB extraíveis
     imageSizeW, imageSizeH = im.size #Extraí tamanho da imagem
+    print(imageSizeW)
+    print(imageSizeH)
     pixelnaopreto =[]
     #Extrai informação de cor de posição de pixels não pretos (que seriam desligados) e guarda em um array, o qual será printado na janela para copiar e colar no código
     for i in range(0, imageSizeW):
         for j in range(0, imageSizeH):
             pixVal = im.getpixel((i, j)) #Pega cor do pixel na posição i,j
             if pixVal != (0, 0, 0): #Se o pixel não for preto
-                pixelnaopreto.append([posled(i,j), definidordecor(pixVal)])
+                pixelnaopreto.append([posled(i,j,imageSizeW,imageSizeH), definidordecor(pixVal)])
                 #Converte a posição em posição sequencial e a cor na cor mais próxima utilizada e guarda na lista de pixels a serem ligados nos leds
 
-    #Traduz para C    
+    #Traduz para C
+    pixelnaopreto.sort()
+
     elementos = str(pixelnaopreto).replace("[","{")
     elementos = elementos.replace("]","}")
    
-                
-    #Exibe as informações do pixel na janela
+#Exibe as informações do pixel na janela
     pixels.config(state="normal")
     pixels.delete("1.0", tk.END) 
     pixels.insert(tk.END, elementos)
@@ -113,7 +157,7 @@ def imglvl():
 #Gera uma janela, define seu tamanho e título    
 janela = tk.Tk() 
 janela.title('Pixelart -> Nível')
-janela.geometry("550x650")
+janela.geometry("800x800")
 
 janela.iconbitmap(resource_path("udescconverticon.ico"))
 
@@ -124,10 +168,56 @@ imgframe.pack(pady=10)
 
 imagem = tk.Canvas(imgframe, width=500, height=500, bg="white", bd=5, relief="sunken")
 imagem.pack()
-
 img = carregar_e_ampliar(imagefile)
 img_container = imagem.create_image(250, 250, image=img, anchor="center")
 
+
+#Cria menu para mais configurações
+barra_menu = tk.Menu(janela)
+janela.config(menu=barra_menu)
+led0 = tk.Menu(barra_menu,tearoff=0)
+barra_menu.add_cascade(label="Led Inicial", menu=led0)
+
+#CONFIGURAÇÃO DA ORIENTAÇÂO DO LED
+
+orientation = tk.StringVar()
+orientation.set(orient[0])
+
+alterna = tk.BooleanVar()
+alterna.set(True)
+
+
+led0.add_radiobutton(
+    label= orient[0],
+    variable=orientation, 
+    value = orient[0],         
+    command= led0
+)
+
+led0.add_radiobutton(
+    label= orient[1],
+    variable=orientation, 
+    value = orient[1],
+    command= led0
+)
+led0.add_radiobutton(
+    label= orient[2],
+    variable=orientation, 
+    value = orient[2],
+    command= led0
+)
+led0.add_radiobutton(
+    label= orient[3],
+    variable=orientation, 
+    value = orient[3],
+    command= led0
+)
+
+led0.add_checkbutton(
+    label = "Sentido alterna a cada linha?",
+    variable = alterna,
+    command = led0
+    )
 #Botão de explorador de arquivos
 
 explorador = tk.Frame(janela)
@@ -141,7 +231,7 @@ button_explore.pack(pady=10)
 comandoframe = tk.Frame(janela)
 comandoframe.pack(pady=10)
 
-bttconverter = tk.Button(comandoframe, text="Extrair informação dos píxels", command=imglvl)
+bttconverter = ttk.Button(comandoframe, text="Extrair informação dos píxels", command=imglvl)
 bttconverter.pack(pady=10)
 
 #Exibição das informações dos pixels extraídas
