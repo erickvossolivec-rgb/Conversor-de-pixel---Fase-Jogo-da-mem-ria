@@ -75,7 +75,7 @@ def explorar_arquivos():
 def posled(i,j,W,H):
     O = orientation.get()
     Alterna = alterna.get()
-    if Alterna:
+    if Alterna == True:
         if O == orient[0]:
             if j%2 == 0:
                 return(W*j+i)
@@ -96,7 +96,7 @@ def posled(i,j,W,H):
                 return((H-1-j)*W+i)
             else:
                 return((H-1-j)*W+(W-1-i))            
-    else:
+    if Alterna == False:
         if O == orient[0]:
             return(W*j+i)
         if O == orient[1]:
@@ -142,15 +142,16 @@ def imglvl():
     Limite = 255
     x = 0
     while A >= Limite:
-        Limite = (2**(8+2*x)) -1
+        Limite = (2**(8+2*x))-1
         x= x+1
 
-    #Traduz para C
+#Traduz para C
     pixelnaopreto.sort()
     pixelnaopreto.append([Limite,'X'])
-
+    
     elementos = str(pixelnaopreto).replace("[","{")
     elementos = elementos.replace("]","}")
+    print(elementos)
    
 #Exibe as informações do pixel na janela
     pixels.config(state="normal")
@@ -191,7 +192,6 @@ orientation.set(orient[0])
 
 alterna = tk.BooleanVar()
 alterna.set(True)
-
 
 led0.add_radiobutton(
     label= orient[0],
