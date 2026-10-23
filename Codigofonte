@@ -129,8 +129,6 @@ def imglvl():
     global imagefile, img, img_container
     im = Image.open(imagefile).convert('RGB') #Converte imagem em valores de RGB extraíveis
     imageSizeW, imageSizeH = im.size #Extraí tamanho da imagem
-    print(imageSizeW)
-    print(imageSizeH)
     pixelnaopreto =[]
     #Extrai informação de cor de posição de pixels não pretos (que seriam desligados) e guarda em um array, o qual será printado na janela para copiar e colar no código
     for i in range(0, imageSizeW):
@@ -139,9 +137,17 @@ def imglvl():
             if pixVal != (0, 0, 0): #Se o pixel não for preto
                 pixelnaopreto.append([posled(i,j,imageSizeW,imageSizeH), definidordecor(pixVal)])
                 #Converte a posição em posição sequencial e a cor na cor mais próxima utilizada e guarda na lista de pixels a serem ligados nos leds
+    
+    A = (imageSizeW * imageSizeH)
+    Limite = 255
+    x = 0
+    while A >= Limite:
+        Limite = (2**(8+2*x)) -1
+        x= x+1
 
     #Traduz para C
     pixelnaopreto.sort()
+    pixelnaopreto.append([Limite,'X'])
 
     elementos = str(pixelnaopreto).replace("[","{")
     elementos = elementos.replace("]","}")
