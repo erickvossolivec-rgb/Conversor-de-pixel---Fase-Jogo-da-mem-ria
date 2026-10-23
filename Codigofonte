@@ -220,7 +220,7 @@ led0.add_radiobutton(
 )
 
 led0.add_checkbutton(
-    label = "Sentido alterna a cada linha?",
+    label = "Sentido alternado a cada linha",
     variable = alterna,
     command = led0
     )
