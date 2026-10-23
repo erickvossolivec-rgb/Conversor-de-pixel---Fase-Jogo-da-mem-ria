@@ -151,7 +151,6 @@ def imglvl():
     
     elementos = str(pixelnaopreto).replace("[","{")
     elementos = elementos.replace("]","}")
-    print(elementos)
    
 #Exibe as informações do pixel na janela
     pixels.config(state="normal")
